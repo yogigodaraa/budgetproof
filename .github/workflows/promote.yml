@@ -1,0 +1,46 @@
+name: Promote dev to prod
+
+# After anything lands on dev and passes checks, auto-open + auto-merge the
+# dev -> prod PR. Production then deploys itself. Keeps prod branch protection
+# intact (promotion goes through a PR), but requires no manual step.
+on:
+  push:
+    branches: [dev]
+
+concurrency:
+  group: promote-prod
+  cancel-in-progress: false
+
+jobs:
+  promote:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npx eslint .
+      - run: npm run build
+        env:
+          NEXT_TELEMETRY_DISABLED: "1"
+      - name: Auto-promote to prod
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          if git diff --quiet origin/prod origin/dev; then
+            echo "prod already up to date — nothing to promote"; exit 0
+          fi
+          URL=$(gh pr list --base prod --head dev --state open --json url --jq '.[0].url')
+          if [ -z "$URL" ]; then
+            URL=$(gh pr create --base prod --head dev \
+              --title "Auto-promote dev → prod" \
+              --body "Automated promotion after lint + build passed on dev.")
+          fi
+          gh pr merge "$URL" --merge

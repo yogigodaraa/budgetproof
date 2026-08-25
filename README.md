@@ -1,32 +1,25 @@
 # BudgetProof
 
-BudgetProof is a local-first budget, income, and expense tracker for imported bank data.
+BudgetProof is an income, expense, GST, tax, debt, merchant, and categorisation dashboard built with Next.js.
 
-The first public version keeps financial data in the user's browser using IndexedDB. Users can import CSV exports, edit categories, review dashboard totals, and export an encrypted-ready JSON backup file. No transaction data is sent to an app server.
+This public repository contains the app code and extraction scripts only. Personal financial data, raw statements, generated datasets, local environment files, and deployment configuration are intentionally ignored.
 
-## MVP scope
-
-- Browser-based storage with export/import backup
-- CSV transaction import
-- JSON backup import
-- Editable categories and merchant grouping
-- Dashboard totals by month and category
-- Synthetic demo data only
-
-## Not included yet
-
-- PDF/OCR bank statement extraction
-- Email/password accounts
-- Cloud sync
-- AI categorisation
-
-These can be added after the local data model is stable.
-
-## Development
+## Local Setup
 
 ```bash
 npm install
+cp .env.example .env.local
 npm run dev
 ```
 
-Open `http://localhost:3000`.
+Set `APP_PASSWORD` and `AUTH_SECRET` in `.env.local`, then open `http://localhost:3000`.
+
+If `data/dataset.json` is missing, the app renders an empty dashboard instead of failing. Generate or import your own local dataset in a private working copy.
+
+## Checks
+
+```bash
+npm run lint
+npm run build
+npm audit --omit=dev
+```
